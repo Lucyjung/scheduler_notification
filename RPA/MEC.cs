@@ -20,6 +20,7 @@ namespace ScheduleNoti.RPA
             string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"Temp");
             string dailyfile = Path.Combine(path, "mecDaily.xlsx");
             string inputFile = Path.Combine(path, "mecInput.xlsm");
+            string configFile = Path.Combine(path, "mecConfig.xlsx");
             bool isCompleted = false;
             bool isSysException = false;
             LINEData data = new LINEData();
@@ -44,18 +45,24 @@ namespace ScheduleNoti.RPA
                     if (File.Exists(dailyfile))
                     {
                         File.SetAttributes(dailyfile, FileAttributes.Normal);
-                    }
-                        
+                    }  
                     File.Copy(files[0].FullName, dailyfile, true);
+
                     if (File.Exists(inputFile))
                     {
                         File.SetAttributes(inputFile, FileAttributes.Normal);
                     }
-                    
                     File.Copy(inputFiles[0].FullName, inputFile, true);
+
+                    if (File.Exists(configFile))
+                    {
+                        File.SetAttributes(configFile, FileAttributes.Normal);
+                    }
+                    File.Copy(Config.mecConfig, configFile, true);
 
                     DataTable dailyDt = ExcelData.readData(dailyfile);
                     DataTable inputDt = ExcelData.readData(inputFile);
+                    DataTable configDt = ExcelData.readData(configFile,1);
                     string dateField = "Monthly Date";
                     string schedule = "Monthly";
 
@@ -123,7 +130,9 @@ namespace ScheduleNoti.RPA
                                     {
                                         msg += "Status : Waiting for Mail\n";
                                         msg += "Run Command : "+ getRerunCmd(processName, parameter)  + "\n";
-                                        msg += "Time : " + convertNotification(dr["Notification Time"]);
+                                        msg += "Time : " + convertNotification(dr["Notification Time"]) + "\n";
+                                        DataRow[] configDr = configDt.Select("[Mail Trigger Process Name] = '" + processName + "'");
+                                        msg += "Robot Controller : " + configDr[0]["Email_BotController"];
                                     } else if (trigger == "Task")
                                     {
                                         msg += "Status : Waiting for Task(s) to complete\n";

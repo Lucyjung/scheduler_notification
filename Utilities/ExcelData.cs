@@ -59,7 +59,7 @@ namespace ScheduleNoti.Utilities
                     var result = reader.AsDataSet();
 
                     // The result of each spreadsheet is in result.Tables
-                    var dt = result.Tables[0];
+                    var dt = result.Tables[sheetIndex];
 
                     foreach (DataColumn column in dt.Columns)
                     {
