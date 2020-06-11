@@ -1,43 +1,83 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 namespace ScheduleNoti.Utilities
 {
     class SQL
     {
-        public static string connectionString;
-        public static int sendSqlQuery(string sqlCmd)
+        public static string connectionString = null;
+        public static void InitSQL(string connection)
         {
-            SqlConnection connection;
-            SqlCommand command;
-            SqlDataReader dataReader;
-            int status = 0;
-
-            if (connectionString != null)
+            connectionString = Base64Decode(connection);
+        }
+        public static DataTable sendSqlQuery(string sqlCmd)
+        {
+            SqlConnection conn = null;
+            DataTable dt = new DataTable();
+            try
             {
-                connection = new SqlConnection(connectionString);
-                try
+                conn = new SqlConnection(connectionString);
+                SqlCommand cmd = new SqlCommand(sqlCmd, conn);
+                conn.Open();
+                SqlDataReader dr = cmd.ExecuteReader(CommandBehavior.CloseConnection);
+                DataTable dtSchema = dr.GetSchemaTable();
+                
+                // You can also use an ArrayList instead of List<>
+                List<DataColumn> listCols = new List<DataColumn>();
+
+                if (dtSchema != null)
                 {
-                    connection.Open();
-                    command = new SqlCommand(sqlCmd, connection);
-                    dataReader = command.ExecuteReader();
-                    while (dataReader.Read())
+                    foreach (DataRow drow in dtSchema.Rows)
                     {
-                        status = Int32.Parse(dataReader.GetValue(2).ToString());
+                        string columnName = Convert.ToString(drow["ColumnName"]);
+                        DataColumn column = new DataColumn(columnName, (Type)(drow["DataType"]));
+                        column.Unique = (bool)drow["IsUnique"];
+                        column.AllowDBNull = (bool)drow["AllowDBNull"];
+                        column.AutoIncrement = (bool)drow["IsAutoIncrement"];
+                        listCols.Add(column);
+                        dt.Columns.Add(column);
                     }
-                    command.Dispose();
-                    connection.Close();
                 }
-                catch (Exception ex)
+
+                // Read rows from DataReader and populate the DataTable
+                while (dr.Read())
                 {
-                    LogFile.WriteToFile("Error sql : " + ex.ToString());
+                    DataRow dataRow = dt.NewRow();
+                    for (int i = 0; i < listCols.Count; i++)
+                    {
+                        dataRow[((DataColumn)listCols[i])] = dr[i];
+                    }
+                    dt.Rows.Add(dataRow);
                 }
             }
+            catch (SqlException ex)
+            {
+                // handle error
+                LogFile.WriteToFile("Error sql : " + ex.ToString());
+            }
+            catch (Exception ex)
+            {
+                // handle error
+                LogFile.WriteToFile("Other Error : " + ex.ToString());
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return dt;
 
-            return status;
+        }
+        private static string Base64Encode(string plainText)
+        {
+            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
+            return System.Convert.ToBase64String(plainTextBytes);
+        }
+        private static string Base64Decode(string base64EncodedData)
+        {
+            var base64EncodedBytes = System.Convert.FromBase64String(base64EncodedData);
+            return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
         }
     }
 }

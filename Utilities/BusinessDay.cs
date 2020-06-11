@@ -1,5 +1,7 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -50,6 +52,27 @@ namespace ScheduleNoti.Utilities
             }
 
             return businessDays;
+        }
+        public static int getCurrentWorkingDay(string calendar)
+        {
+            var date = DateTime.Now;
+            var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
+
+            string sqlcmd = @"SELECT [name]
+            ,[nonworkingday]
+              FROM [BPANonWorkingDay]
+              INNER JOIN [BPACalendar]
+              on [BPACalendar].[id] = [BPANonWorkingDay].[calendarid]
+              WHERE [BPANonWorkingDay].nonworkingday >= '"+ firstDayOfMonth.ToString("yyyy-MM-dd")+ "' AND [BPANonWorkingDay].nonworkingday <= '" +  date.ToString("yyyy-MM-dd") + "' AND[name] = '" + calendar + "'";
+            DataTable dt = SQL.sendSqlQuery(sqlcmd);
+            List<DateTime> dat = new List<DateTime>();
+            foreach (DataRow dr in dt.Rows)
+            {
+                dat.Add(Convert.ToDateTime(dr["nonworkingday"]));
+            }
+            
+            int WorkingDay = BusinessDaysUntil(firstDayOfMonth, date, dat.ToArray());
+            return WorkingDay;
         }
     }
 }

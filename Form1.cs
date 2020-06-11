@@ -19,7 +19,7 @@ namespace ScheduleNoti
         {
             InitializeComponent();
             Config.GetConfigurationValue();
-
+            SQL.InitSQL(Config.sqlConnectionString);
             scheduler.Init(Config.interval, timerCallback);
             LogFile.WriteToFile("Start Program");
             _ = DoMECAsync();
@@ -50,17 +50,17 @@ namespace ScheduleNoti
         {
             await Task.Run(async () =>
             {
-                string dailyPath = Path.Combine(Config.mecDailyPath, DateTime.Now.ToString("yyyyMM"), DateTime.Now.ToString("yyyyMMdd"), "Robot Logs");
-                bool isSysExp = false;
-                var mecMsg = RPA.MEC.getStatus(dailyPath, ref isSysExp);
-                if (isSysExp)
+                try
                 {
-                    LINE.sendNoti(Config.lineToken, mecMsg, 2, 25);
-                } else
-                {
+                    string dailyPath = Path.Combine(Config.mecDailyPath, DateTime.Now.ToString("yyyyMM"), DateTime.Now.ToString("yyyyMMdd"), "Robot Logs");
+
+                    var mecMsg = RPA.MEC.getStatus(dailyPath, Config.mecInputPath);
+
                     LINE.sendNoti(Config.lineToken, mecMsg);
+                }catch (Exception ex)
+                {
+                    LogFile.WriteToFile("Exception : " + ex.ToString());
                 }
-                
             });
         }
         private void Form1_Resize(object sender, EventArgs e)

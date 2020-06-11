@@ -14,6 +14,8 @@ namespace ScheduleNoti.Utilities
         public static string mecInputPath;
         public static string mecDailyPath;
         public static string lineToken;
+        public static string sqlConnectionString;
+        public static string calendarPTT;
         public static void GetConfigurationValue()
         {
             try
@@ -23,7 +25,8 @@ namespace ScheduleNoti.Utilities
                 mecInputPath = ConfigurationManager.AppSettings["MECInputPath"];
                 mecDailyPath = ConfigurationManager.AppSettings["MECDailyPath"];
                 lineToken = ConfigurationManager.AppSettings["lineToken"];
-
+                sqlConnectionString = ConfigurationManager.AppSettings["sqlConnectionString"];
+                calendarPTT = ConfigurationManager.AppSettings["calendarPTT"];
             }
             catch (Exception ex)
             {
