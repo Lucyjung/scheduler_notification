@@ -66,6 +66,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RPA\MEC.cs" />
+    <Compile Include="RPA\Server.cs" />
     <Compile Include="Utilities\Config.cs" />
     <Compile Include="Utilities\ExcelData.cs" />
     <Compile Include="Utilities\HTTPRequest.cs" />

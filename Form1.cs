@@ -13,14 +13,16 @@ namespace ScheduleNoti
 {
     public partial class Form1 : Form
     {
-        Scheduler scheduler = new Scheduler();
+        Scheduler mecScheduler = new Scheduler();
+        Scheduler serverScheduler = new Scheduler();
         private static string[] APP_STATE = { "Start", "Running" };
         public Form1()
         {
             InitializeComponent();
             Config.GetConfigurationValue();
             SQL.InitSQL(Config.sqlConnectionString);
-            scheduler.Init(Config.interval, timerCallback);
+            mecScheduler.Init(Config.interval, timerCallback);
+            serverScheduler.Init(Config.serverInterval, serverTimerCallback);
             LogFile.WriteToFile("Start Program");
             _ = DoMECAsync();
         }
@@ -29,13 +31,13 @@ namespace ScheduleNoti
         {
             if (Stop.Text == APP_STATE[0])
             {
-                scheduler.Init(Config.interval, timerCallback);
+                mecScheduler.Init(Config.interval, timerCallback);
                 Stop.Text = APP_STATE[1];
                 LogFile.WriteToFile("Restart Program");
             }
             else
             {
-                scheduler.Disable();
+                mecScheduler.Disable();
                 Stop.Text = APP_STATE[0];
                 LogFile.WriteToFile("Stop Program");
             }
@@ -45,6 +47,10 @@ namespace ScheduleNoti
             _ = DoMECAsync();
             
             LogFile.WriteToFile("Send Notification");
+        }
+        private void serverTimerCallback(string arg)
+        {
+            _ = DoStatusCheckAsync();
         }
         private async Task DoMECAsync()
         {
@@ -58,6 +64,22 @@ namespace ScheduleNoti
 
                     LINE.sendNoti(Config.lineToken, mecMsg);
                 }catch (Exception ex)
+                {
+                    LogFile.WriteToFile("Exception : " + ex.ToString());
+                }
+            });
+        }
+        private async Task DoStatusCheckAsync()
+        {
+            await Task.Run(async () =>
+            {
+                try
+                {
+
+                    var serverMsg = RPA.Server.getStatus();
+                    LINE.sendNoti(Config.lineToken, serverMsg);
+                }
+                catch (Exception ex)
                 {
                     LogFile.WriteToFile("Exception : " + ex.ToString());
                 }

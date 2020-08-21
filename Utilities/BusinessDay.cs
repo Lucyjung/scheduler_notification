@@ -58,21 +58,69 @@ namespace ScheduleNoti.Utilities
             var date = DateTime.Now;
             var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
 
+            
+            int WorkingDay = BusinessDaysUntil(firstDayOfMonth, date, getHoliday(calendar));
+            return WorkingDay;
+        }
+        public static int getSalaryDay( string calendar, int inputDay= 28)
+        {
+            bool finding = true;
+            int salaryDay = inputDay;
+            DateTime[] holidays = getHoliday(calendar, true);
+            do
+            {
+                DateTime date = new DateTime(DateTime.Today.Year, DateTime.Today.Month, salaryDay);
+                DayOfWeek day = date.DayOfWeek;
+
+                if (day == DayOfWeek.Saturday || day == DayOfWeek.Sunday)
+                {
+                    salaryDay--;
+                } else
+                {
+                    bool isHoliday = false;
+                    foreach (DateTime holiday in holidays)
+                    {
+                        if (holiday.Day == salaryDay)
+                        {
+                            salaryDay--;
+                            isHoliday = true;
+                            break;
+                        }
+                    }
+                    if (isHoliday == false)
+                    {
+                        finding = false;
+                    }
+                }
+                
+            } while (finding);
+            
+            return salaryDay;
+        }
+        private static DateTime[] getHoliday(string calendar, bool endOfMonth = false)
+        {
+            var date = DateTime.Now;
+            var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
+            string lastDay = date.ToString("yyyy-MM-dd");
+            if (endOfMonth)
+            {
+                var lastDayOfMonth = new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
+                lastDay = lastDayOfMonth.ToString();
+            } 
+             
             string sqlcmd = @"SELECT [name]
             ,[nonworkingday]
               FROM [BPANonWorkingDay]
               INNER JOIN [BPACalendar]
               on [BPACalendar].[id] = [BPANonWorkingDay].[calendarid]
-              WHERE [BPANonWorkingDay].nonworkingday >= '"+ firstDayOfMonth.ToString("yyyy-MM-dd")+ "' AND [BPANonWorkingDay].nonworkingday <= '" +  date.ToString("yyyy-MM-dd") + "' AND[name] = '" + calendar + "'";
+              WHERE [BPANonWorkingDay].nonworkingday >= '" + firstDayOfMonth.ToString("yyyy-MM-dd") + "' AND [BPANonWorkingDay].nonworkingday <= '" + lastDay + "' AND [name] = '" + calendar + "'";
             DataTable dt = SQL.sendSqlQuery(sqlcmd);
             List<DateTime> dat = new List<DateTime>();
             foreach (DataRow dr in dt.Rows)
             {
                 dat.Add(Convert.ToDateTime(dr["nonworkingday"]));
             }
-            
-            int WorkingDay = BusinessDaysUntil(firstDayOfMonth, date, dat.ToArray());
-            return WorkingDay;
+            return dat.ToArray();
         }
     }
 }
