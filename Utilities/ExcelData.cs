@@ -1,13 +1,10 @@
 ﻿using ExcelDataReader;
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using Excel = Microsoft.Office.Interop.Excel;
+using ClosedXML.Excel;
 
 namespace ScheduleNoti.Utilities
 {
@@ -116,6 +113,21 @@ namespace ScheduleNoti.Utilities
                 Console.WriteLine(ex.Message);
             }
             return dt;
+        }
+        public static void saveTableToExcel(string outputFile, string worksheetName, DataTable dt)
+        {
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add(dt, worksheetName);
+                int i = 1;
+                foreach (DataColumn dc in dt.Columns)
+                {
+                    worksheet.Cell(1, i).Value = dc.ColumnName;
+                    i++;
+                }
+                worksheet.Columns(1, i).AdjustToContents();
+                workbook.SaveAs(outputFile);
+            }
         }
     }
 }

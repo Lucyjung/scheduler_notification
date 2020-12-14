@@ -15,16 +15,22 @@ namespace ScheduleNoti
     {
         Scheduler mecScheduler = new Scheduler();
         Scheduler serverScheduler = new Scheduler();
+        Scheduler bankRecScheduler = new Scheduler();
         private static string[] APP_STATE = { "Start", "Running" };
         public Form1()
         {
             InitializeComponent();
             Config.GetConfigurationValue();
+            
             SQL.InitSQL(Config.sqlConnectionString);
             mecScheduler.Init(Config.interval, timerCallback);
             serverScheduler.Init(Config.serverInterval, serverTimerCallback);
-            LogFile.WriteToFile("Start Program");
+            
             _ = DoMECAsync();
+            
+            bankRecScheduler.Init(Config.bankRecInterval, bankRecTimerCallback);
+            _ = bankRecNotiAsync();
+            LogFile.WriteToFile("Start Program");
         }
         
         private void Stop_Click(object sender, EventArgs e)
@@ -52,6 +58,10 @@ namespace ScheduleNoti
         {
             _ = DoStatusCheckAsync();
         }
+        private void bankRecTimerCallback(string arg)
+        {
+            _ = bankRecNotiAsync();
+        }
         private async Task DoMECAsync()
         {
             await Task.Run(async () =>
@@ -78,6 +88,20 @@ namespace ScheduleNoti
 
                     var serverMsg = RPA.Server.getStatus();
                     LINE.sendNoti(Config.lineToken, serverMsg);
+                }
+                catch (Exception ex)
+                {
+                    LogFile.WriteToFile("Exception : " + ex.ToString());
+                }
+            });
+        }
+        private async Task bankRecNotiAsync()
+        {
+            await Task.Run(async () =>
+            {
+                try
+                {
+                    RPA.BankRec.notifyOtherReport();
                 }
                 catch (Exception ex)
                 {

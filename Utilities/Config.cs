@@ -19,6 +19,9 @@ namespace ScheduleNoti.Utilities
         public static string calendarPTT;
         public static string mecConfig;
         public static string appServer;
+        public static int bankRecInterval;
+        public static string bankRecMasterRefFile;
+        public static string bankRecNotiConfigFile;
         public static void GetConfigurationValue()
         {
             try
@@ -33,6 +36,9 @@ namespace ScheduleNoti.Utilities
                 calendarPTT = ConfigurationManager.AppSettings["calendarPTT"];
                 mecConfig = ConfigurationManager.AppSettings["MECConfig"];
                 appServer = ConfigurationManager.AppSettings["appServer"];
+                bankRecInterval = int.Parse(ConfigurationManager.AppSettings["bankRecInterval"]);
+                bankRecMasterRefFile = ConfigurationManager.AppSettings["bankRecMasterRefFile"];
+                bankRecNotiConfigFile = ConfigurationManager.AppSettings["bankRecNotiConfigFile"];
             }
             catch (Exception ex)
             {
