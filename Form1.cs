@@ -16,6 +16,8 @@ namespace ScheduleNoti
         Scheduler mecScheduler = new Scheduler();
         Scheduler serverScheduler = new Scheduler();
         Scheduler bankRecScheduler = new Scheduler();
+        Scheduler availScheduler = new Scheduler();
+        Scheduler checkFreezeScheduler = new Scheduler();
         private static string[] APP_STATE = { "Start", "Running" };
         public Form1()
         {
@@ -23,13 +25,17 @@ namespace ScheduleNoti
             Config.GetConfigurationValue();
             
             SQL.InitSQL(Config.sqlConnectionString);
+            
             mecScheduler.Init(Config.interval, timerCallback);
             serverScheduler.Init(Config.serverInterval, serverTimerCallback);
-            
+            availScheduler.Init(Config.availInterval, availTimerCallback);
+            checkFreezeScheduler.Init(Config.checkFreezeInterval, checkFreezeTimerCallback);
+            _ = availNotiAsync();
             _ = DoMECAsync();
             
             bankRecScheduler.Init(Config.bankRecInterval, bankRecTimerCallback);
             _ = bankRecNotiAsync();
+
             LogFile.WriteToFile("Start Program");
         }
         
@@ -58,9 +64,17 @@ namespace ScheduleNoti
         {
             _ = DoStatusCheckAsync();
         }
+        private void availTimerCallback(string arg)
+        {
+            _ = availNotiAsync();
+        }
         private void bankRecTimerCallback(string arg)
         {
             _ = bankRecNotiAsync();
+        }
+        private void checkFreezeTimerCallback(string arg)
+        {
+            _ = checkFreezeNotiAsync();
         }
         private async Task DoMECAsync()
         {
@@ -102,6 +116,36 @@ namespace ScheduleNoti
                 try
                 {
                     RPA.BankRec.notifyOtherReport();
+                }
+                catch (Exception ex)
+                {
+                    LogFile.WriteToFile("Exception : " + ex.ToString());
+                }
+            });
+        }
+        private async Task availNotiAsync()
+        {
+            await Task.Run(async () =>
+            {
+                try
+                {
+                    var terminatedMsg = RPA.Server.getScheduleTerminatedStatus();
+                    LINE.sendNoti(Config.lineToken, terminatedMsg);
+                }
+                catch (Exception ex)
+                {
+                    LogFile.WriteToFile("Exception : " + ex.ToString());
+                }
+            });
+        }
+        private async Task checkFreezeNotiAsync()
+        {
+            await Task.Run(async () =>
+            {
+                try
+                {
+                    var msg = RPA.Server.checkFreezeVM();
+                    LINE.sendNoti(Config.lineToken, msg);
                 }
                 catch (Exception ex)
                 {

@@ -13,17 +13,21 @@ namespace ScheduleNoti.Utilities
         private Action<string> aTimerCB;
         public void Init(int interval, Action<string> callback)
         {
-            // Timer Init 
-            aTimer = new System.Timers.Timer();
+            if (interval > 0)
+            {
+                // Timer Init 
+                aTimer = new System.Timers.Timer();
 
-            // Hook up the Elapsed event for the timer. 
-            aTimer.Elapsed += OnTimedEvent;
-            aTimer.Interval = interval * 1000;
+                // Hook up the Elapsed event for the timer. 
+                aTimer.Elapsed += OnTimedEvent;
+                aTimer.Interval = interval * 1000;
 
-            // Have the timer fire repeated events (true is the default)
-            aTimer.AutoReset = true;
-            aTimer.Enabled = true;
-            aTimerCB = callback;
+                // Have the timer fire repeated events (true is the default)
+                aTimer.AutoReset = true;
+                aTimer.Enabled = true;
+                aTimerCB = callback;
+            }
+            
         }
         public void Disable()
         {

@@ -14,8 +14,14 @@ namespace ScheduleNoti.Utilities
         }
         public static DataTable sendSqlQuery(string sqlCmd)
         {
+            bool isError = false;
+            return sendSqlQuery(sqlCmd, ref isError);
+        }
+        public static DataTable sendSqlQuery(string sqlCmd, ref bool isError)
+        {
             SqlConnection conn = null;
             DataTable dt = new DataTable();
+            isError = false;
             try
             {
                 conn = new SqlConnection(connectionString);
@@ -56,11 +62,13 @@ namespace ScheduleNoti.Utilities
             {
                 // handle error
                 LogFile.WriteToFile("Error sql : " + ex.ToString());
+                isError = true;
             }
             catch (Exception ex)
             {
                 // handle error
                 LogFile.WriteToFile("Other Error : " + ex.ToString());
+                isError = true;
             }
             finally
             {

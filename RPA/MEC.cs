@@ -8,6 +8,7 @@ using ScheduleNoti.Utilities;
 using System.IO;
 using System.Data;
 using System.Drawing;
+using System.Reflection;
 
 namespace ScheduleNoti.RPA
 {
@@ -19,6 +20,7 @@ namespace ScheduleNoti.RPA
             var date = DateTime.Now;
             string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"Temp");
             string dailyfile = Path.Combine(path, "mecDaily.xlsx");
+            string msgFile = Path.Combine(path, "mecMsg.xlsx");
             string inputFile = Path.Combine(path, "mecInput.xlsm");
             string configFile = Path.Combine(path, "mecConfig.xlsx");
             bool isCompleted = false;
@@ -227,7 +229,23 @@ namespace ScheduleNoti.RPA
                     
                 }
             }
-            return msgList.ToArray();
+            DataTable msgDt = ExcelData.readData(msgFile);
+            var newMsgList = new List<LINEData>();
+
+            foreach (LINEData msg in msgList)
+            {
+                var found = msgDt.Select("[message]='" + msg.message.Replace("\r","") + "'");
+                if (found.Length == 0)
+                {
+                    LINEData newMsg = new LINEData();
+                    newMsg.message = msg.message;
+                    newMsg.stickerid = msg.stickerid;
+                    newMsg.stickerPkg = msg.stickerPkg;
+                    newMsgList.Add(newMsg);
+                }
+            }
+            ExcelData.saveTableToExcel(msgFile, "Message", CreateDataTable(msgList));
+            return newMsgList.ToArray();
         }
         private static string getRerunCmd(string processName, string parameter)
         {
@@ -245,6 +263,30 @@ namespace ScheduleNoti.RPA
         private static string convertNotification(Object obj)
         {
             return obj.ToString().Replace("12/31/1899 ", "");
+        }
+        public static DataTable CreateDataTable<T>(IEnumerable<T> list)
+        {
+            Type type = typeof(T);
+            var properties = type.GetProperties();
+
+            DataTable dataTable = new DataTable();
+            foreach (PropertyInfo info in properties)
+            {
+                dataTable.Columns.Add(new DataColumn(info.Name, Nullable.GetUnderlyingType(info.PropertyType) ?? info.PropertyType));
+            }
+
+            foreach (T entity in list)
+            {
+                object[] values = new object[properties.Length];
+                for (int i = 0; i < properties.Length; i++)
+                {
+                    values[i] = properties[i].GetValue(entity);
+                }
+
+                dataTable.Rows.Add(values);
+            }
+
+            return dataTable;
         }
     }
 }

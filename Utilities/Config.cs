@@ -12,6 +12,8 @@ namespace ScheduleNoti.Utilities
     {
         public static int interval;
         public static int serverInterval;
+        public static int availInterval;
+        public static int checkFreezeInterval;
         public static string mecInputPath;
         public static string mecDailyPath;
         public static string lineToken;
@@ -22,6 +24,9 @@ namespace ScheduleNoti.Utilities
         public static int bankRecInterval;
         public static string bankRecMasterRefFile;
         public static string bankRecNotiConfigFile;
+        public static string perfReportConfigFile;
+        public static string ignoreAvailSchedule;
+        public static string checkFreezeVM;
         public static void GetConfigurationValue()
         {
             try
@@ -29,6 +34,8 @@ namespace ScheduleNoti.Utilities
 ;
                 interval = int.Parse(ConfigurationManager.AppSettings["Interval"]);
                 serverInterval = int.Parse(ConfigurationManager.AppSettings["serverInterval"]);
+                availInterval = int.Parse(ConfigurationManager.AppSettings["availInterval"]);
+                checkFreezeInterval = int.Parse(ConfigurationManager.AppSettings["checkFreezeInterval"]);
                 mecInputPath = ConfigurationManager.AppSettings["MECInputPath"];
                 mecDailyPath = ConfigurationManager.AppSettings["MECDailyPath"];
                 lineToken = ConfigurationManager.AppSettings["lineToken"];
@@ -39,6 +46,9 @@ namespace ScheduleNoti.Utilities
                 bankRecInterval = int.Parse(ConfigurationManager.AppSettings["bankRecInterval"]);
                 bankRecMasterRefFile = ConfigurationManager.AppSettings["bankRecMasterRefFile"];
                 bankRecNotiConfigFile = ConfigurationManager.AppSettings["bankRecNotiConfigFile"];
+                ignoreAvailSchedule = ConfigurationManager.AppSettings["ignoreAvailSchedule"];
+                perfReportConfigFile = ConfigurationManager.AppSettings["perfReportConfigFile"];
+                checkFreezeVM = ConfigurationManager.AppSettings["checkFreezeVM"];
             }
             catch (Exception ex)
             {
