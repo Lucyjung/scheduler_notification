@@ -169,15 +169,15 @@ namespace ScheduleNoti.RPA
                         DataRow[] saved = savedStatusDt.Select("[name]='" + vm + "'");
                         int status;
 
-                        success = Int32.TryParse(curStatus[0]["statusid"].ToString(), out status);
+                        success = Int32.TryParse(curStatus[0][0].ToString(), out status); // index 0 = statusid
                         if (success && (status == (int)BPStatus.Running || status == (int)BPStatus.Warning))
                         {
-                            if (curStatus[0]["laststage"].ToString() == saved[0]["laststage"].ToString())
+                            if (curStatus[0][2].ToString() == saved[0][2].ToString() && curStatus[0][1].ToString() == saved[0][1].ToString()) // index 2 = laststage, 1 = lastupdated
                             {
                                 LINEData expTotalData = new LINEData();
                                 expTotalData.message = "\nVM : " + vm + " has been showing same stage for " + Config.checkFreezeInterval + " Seconds" +
-                                    "\nStage : " + curStatus[0]["laststage"].ToString() + 
-                                    "\nLast Update : " + curStatus[0]["lastupdated"].ToString();
+                                    "\nStage : " + curStatus[0][2].ToString() +  // index 2 = laststage
+                                    "\nLast Update : " + curStatus[0][2].ToString(); // index 2 = laststage
                                 expTotalData.stickerid = 173;
                                 expTotalData.stickerPkg = 2;
                                 msgList.Add(expTotalData);
