@@ -5,6 +5,9 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Excel = Microsoft.Office.Interop.Excel;
 using ClosedXML.Excel;
+using System.Text;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ScheduleNoti.Utilities
 {
@@ -128,6 +131,22 @@ namespace ScheduleNoti.Utilities
                 worksheet.Columns(1, i).AdjustToContents();
                 workbook.SaveAs(outputFile);
             }
+        }
+        public static void saveTableToCSV(string outputFile, DataTable dt)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            IEnumerable<string> columnNames = dt.Columns.Cast<DataColumn>().
+                                              Select(column => column.ColumnName);
+            sb.AppendLine(string.Join(",", columnNames));
+
+            foreach (DataRow row in dt.Rows)
+            {
+                IEnumerable<string> fields = row.ItemArray.Select(field => field.ToString());
+                sb.AppendLine(string.Join(",", fields));
+            }
+
+            File.WriteAllText(outputFile, sb.ToString());
         }
     }
 }

@@ -13,145 +13,66 @@ namespace ScheduleNoti
 {
     public partial class Form1 : Form
     {
-        Scheduler mecScheduler = new Scheduler();
-        Scheduler serverScheduler = new Scheduler();
-        Scheduler bankRecScheduler = new Scheduler();
-        Scheduler availScheduler = new Scheduler();
-        Scheduler checkFreezeScheduler = new Scheduler();
+        enum TaskName
+        {
+            MEC = 0,
+            SERVER,
+            AVAILABLE,
+            FREEZEVM,
+            BACKREC,
+            HOUSEKEEPING,
+            LAST
+        }
         private static string[] APP_STATE = { "Start", "Running" };
+
+        private static Scheduler[] tasks = new Scheduler[(int)TaskName.LAST];
+
         public Form1()
         {
             InitializeComponent();
             Config.GetConfigurationValue();
             
             SQL.InitSQL(Config.sqlConnectionString);
-            
-            mecScheduler.Init(Config.interval, timerCallback);
-            serverScheduler.Init(Config.serverInterval, serverTimerCallback);
-            availScheduler.Init(Config.availInterval, availTimerCallback);
-            checkFreezeScheduler.Init(Config.checkFreezeInterval, checkFreezeTimerCallback);
-            _ = availNotiAsync();
-            _ = DoMECAsync();
-            
-            bankRecScheduler.Init(Config.bankRecInterval, bankRecTimerCallback);
-            _ = bankRecNotiAsync();
+            for (int i = 0; i < (int)TaskName.LAST; i++)
+            {
+                tasks[i] = new Scheduler();
+            }
 
+            tasks[(int)TaskName.MEC].Init(Config.interval, RPA.MEC.getStatus, true);
+            tasks[(int)TaskName.SERVER].Init(Config.serverInterval, RPA.Server.getStatus, false);
+            tasks[(int)TaskName.AVAILABLE].Init(Config.availInterval, RPA.Server.getScheduleTerminatedStatus, true);
+            tasks[(int)TaskName.FREEZEVM].Init(Config.checkFreezeInterval, RPA.Server.checkFreezeVM, false);
+            tasks[(int)TaskName.BACKREC].Init(Config.bankRecInterval, RPA.BankRec.notifyOtherReport, true);
+            tasks[(int)TaskName.HOUSEKEEPING].Init(Config.houseKeepingInterval, RPA.HouseKeeping.Execute, false);
             LogFile.WriteToFile("Start Program");
         }
-        
+        private void startTimers()
+        {
+            foreach (var task in tasks)
+            {
+                task.Enable();
+            }
+        }
+        private void stopTimers()
+        {
+            foreach (var task in tasks){
+                task.Disable();
+            }
+        }
         private void Stop_Click(object sender, EventArgs e)
         {
             if (Stop.Text == APP_STATE[0])
             {
-                mecScheduler.Init(Config.interval, timerCallback);
+                startTimers();
                 Stop.Text = APP_STATE[1];
                 LogFile.WriteToFile("Restart Program");
             }
             else
             {
-                mecScheduler.Disable();
+                stopTimers();
                 Stop.Text = APP_STATE[0];
                 LogFile.WriteToFile("Stop Program");
             }
-        }
-        private void timerCallback(string arg)
-        {
-            _ = DoMECAsync();
-            
-            LogFile.WriteToFile("Send Notification");
-        }
-        private void serverTimerCallback(string arg)
-        {
-            _ = DoStatusCheckAsync();
-        }
-        private void availTimerCallback(string arg)
-        {
-            _ = availNotiAsync();
-        }
-        private void bankRecTimerCallback(string arg)
-        {
-            _ = bankRecNotiAsync();
-        }
-        private void checkFreezeTimerCallback(string arg)
-        {
-            _ = checkFreezeNotiAsync();
-        }
-        private async Task DoMECAsync()
-        {
-            await Task.Run(async () =>
-            {
-                try
-                {
-                    string dailyPath = Path.Combine(Config.mecDailyPath, DateTime.Now.ToString("yyyyMM"), DateTime.Now.ToString("yyyyMMdd"), "Robot Logs");
-
-                    var mecMsg = RPA.MEC.getStatus(dailyPath, Config.mecInputPath);
-
-                    LINE.sendNoti(Config.lineToken, mecMsg);
-                }catch (Exception ex)
-                {
-                    LogFile.WriteToFile("Exception : " + ex.ToString());
-                }
-            });
-        }
-        private async Task DoStatusCheckAsync()
-        {
-            await Task.Run(async () =>
-            {
-                try
-                {
-
-                    var serverMsg = RPA.Server.getStatus();
-                    LINE.sendNoti(Config.lineToken, serverMsg);
-                }
-                catch (Exception ex)
-                {
-                    LogFile.WriteToFile("Exception : " + ex.ToString());
-                }
-            });
-        }
-        private async Task bankRecNotiAsync()
-        {
-            await Task.Run(async () =>
-            {
-                try
-                {
-                    RPA.BankRec.notifyOtherReport();
-                }
-                catch (Exception ex)
-                {
-                    LogFile.WriteToFile("Exception : " + ex.ToString());
-                }
-            });
-        }
-        private async Task availNotiAsync()
-        {
-            await Task.Run(async () =>
-            {
-                try
-                {
-                    var terminatedMsg = RPA.Server.getScheduleTerminatedStatus();
-                    LINE.sendNoti(Config.lineToken, terminatedMsg);
-                }
-                catch (Exception ex)
-                {
-                    LogFile.WriteToFile("Exception : " + ex.ToString());
-                }
-            });
-        }
-        private async Task checkFreezeNotiAsync()
-        {
-            await Task.Run(async () =>
-            {
-                try
-                {
-                    var msg = RPA.Server.checkFreezeVM();
-                    LINE.sendNoti(Config.lineToken, msg);
-                }
-                catch (Exception ex)
-                {
-                    LogFile.WriteToFile("Exception : " + ex.ToString());
-                }
-            });
         }
         private void Form1_Resize(object sender, EventArgs e)
         {

@@ -14,10 +14,12 @@ namespace ScheduleNoti.RPA
 {
     class MEC
     {
-        public static LINEData[] getStatus(string robotLogPath, string inputPath)
+        public static LINEData[] getStatus()
         {
             var msgList = new List<LINEData>();
             var date = DateTime.Now;
+            string inputPath = Config.mecInputPath;
+            string robotLogPath = Path.Combine(Config.mecDailyPath, DateTime.Now.ToString("yyyyMM"), DateTime.Now.ToString("yyyyMMdd"), "Robot Logs");
             string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"Temp");
             string dailyfile = Path.Combine(path, "mecDaily.xlsx");
             string msgFile = Path.Combine(path, "mecMsg.xlsx");
@@ -25,6 +27,7 @@ namespace ScheduleNoti.RPA
             string configFile = Path.Combine(path, "mecConfig.xlsx");
             bool isCompleted = false;
             bool isSysException = false;
+            bool isException = false;
             LINEData data = new LINEData();
             string status = "\n";
             status += "================\n";
@@ -127,6 +130,7 @@ namespace ScheduleNoti.RPA
                                 }
                                 string processName = dr["Mail Trigger Process Name"].ToString();
                                 isSysException = false;
+                                isException = false;
                                 if (processName != "")
                                 {
                                     string taskStatus = dr["Task Status"].ToString();
@@ -197,6 +201,7 @@ namespace ScheduleNoti.RPA
                                             {
                                                 isSysException = true;
                                             }
+                                            isException = true;
                                         }
                                         else if (taskStatus.Contains("SCHEDULED"))
                                         {
@@ -207,10 +212,18 @@ namespace ScheduleNoti.RPA
                                             expData.message = exceptionMsg;
                                             expData.stickerid = 173;
                                             expData.stickerPkg = 2;
+                                            expData.notificationDisabled = false;
                                             msgList.Add(expData);
                                         }
                                         else
                                         {
+                                            if (isException)
+                                            {
+                                                expData.notificationDisabled = false;
+                                            } else
+                                            {
+                                                expData.notificationDisabled = true;
+                                            }
                                             expData.message = exceptionMsg;
                                             expData.stickerid = 0;
                                             expData.stickerPkg = 0;
@@ -231,10 +244,10 @@ namespace ScheduleNoti.RPA
             }
             DataTable msgDt = ExcelData.readData(msgFile);
             var newMsgList = new List<LINEData>();
-
+            
             foreach (LINEData msg in msgList)
             {
-                var found = msgDt.Select("[message]='" + msg.message.Replace("\r","") + "'");
+                var found = msgDt.Select("[message]='" + msg.message.Replace("\r", "") + "'");
                 if (found.Length == 0)
                 {
                     LINEData newMsg = new LINEData();
@@ -245,6 +258,7 @@ namespace ScheduleNoti.RPA
                 }
             }
             ExcelData.saveTableToExcel(msgFile, "Message", CreateDataTable(msgList));
+
             return newMsgList.ToArray();
         }
         private static string getRerunCmd(string processName, string parameter)

@@ -22,9 +22,10 @@ namespace ScheduleNoti.Utilities
         public static string mecConfig;
         public static string appServer;
         public static int bankRecInterval;
+        public static int houseKeepingInterval;
         public static string bankRecMasterRefFile;
         public static string bankRecNotiConfigFile;
-        public static string perfReportConfigFile;
+        public static string houseKeepingConfigFile;
         public static string ignoreAvailSchedule;
         public static string checkFreezeVM;
         public static void GetConfigurationValue()
@@ -47,8 +48,9 @@ namespace ScheduleNoti.Utilities
                 bankRecMasterRefFile = ConfigurationManager.AppSettings["bankRecMasterRefFile"];
                 bankRecNotiConfigFile = ConfigurationManager.AppSettings["bankRecNotiConfigFile"];
                 ignoreAvailSchedule = ConfigurationManager.AppSettings["ignoreAvailSchedule"];
-                perfReportConfigFile = ConfigurationManager.AppSettings["perfReportConfigFile"];
+                houseKeepingConfigFile = ConfigurationManager.AppSettings["houseKeepingConfigFile"];
                 checkFreezeVM = ConfigurationManager.AppSettings["checkFreezeVM"];
+                houseKeepingInterval = int.Parse(ConfigurationManager.AppSettings["houseKeepingInterval"]);
             }
             catch (Exception ex)
             {

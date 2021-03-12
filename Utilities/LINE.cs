@@ -21,6 +21,7 @@ namespace ScheduleNoti.Utilities
                     lineMsg.Add(new KeyValuePair<string, string>("stickerPackageId", msg.stickerPkg.ToString()));
                     lineMsg.Add(new KeyValuePair<string, string>("stickerId", msg.stickerid.ToString()));
                 }
+                lineMsg.Add(new KeyValuePair<string, string>("notificationDisabled", msg.notificationDisabled.ToString()));
                 HTTPRequest request = new HTTPRequest();
                 _ = request.CurlRequestAsync(notifyUrl, "POST", lineMsg, "Bearer " + token);
                 System.Threading.Thread.Sleep(1000);
@@ -28,10 +29,12 @@ namespace ScheduleNoti.Utilities
             
         }
     }
-    class LINEData
+    public class LINEData
     {
         public string message { get; set; }
         public int stickerPkg { get; set; }
         public int stickerid { get; set; }
+
+        public bool notificationDisabled = false;
     }
 }

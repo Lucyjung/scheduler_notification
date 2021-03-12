@@ -12,8 +12,9 @@ namespace ScheduleNoti.RPA
 {
     class BankRec
     {
-        public static void notifyOtherReport()
+        public static LINEData[] notifyOtherReport()
         {
+            var msgList = new List<LINEData>();
             string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Temp");
             string masterRef = Path.Combine(path, "bankRecMaster.xlsx");
             File.Copy(Config.bankRecMasterRefFile, masterRef, true);
@@ -75,7 +76,7 @@ namespace ScheduleNoti.RPA
             }
             ExcelData.saveTableToExcel(Config.bankRecNotiConfigFile, "Config", configTbl);
             
-            return;
+            return msgList.ToArray();
         }
     }
 }
