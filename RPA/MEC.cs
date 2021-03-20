@@ -145,6 +145,7 @@ namespace ScheduleNoti.RPA
                                             msgList[0].stickerid = 22;
                                             msgList[0].stickerPkg = 2;
                                         }
+                                        msgList[0].notificationDisabled = true;
                                         isCompleted = true;
                                     }
                                     
@@ -254,6 +255,7 @@ namespace ScheduleNoti.RPA
                     newMsg.message = msg.message;
                     newMsg.stickerid = msg.stickerid;
                     newMsg.stickerPkg = msg.stickerPkg;
+                    newMsg.notificationDisabled = msg.notificationDisabled;
                     newMsgList.Add(newMsg);
                 }
             }
